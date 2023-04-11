@@ -1,0 +1,10 @@
+{
+    "cmake.configureOnOpen": true,
+    "cmake.sourceDirectory": "${workspaceFolder}/SDL/.github/cmake",
+    "files.associations": {
+        "stdio.h": "c",
+        "sdl.h": "c",
+        "neuralnetworkrender.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
