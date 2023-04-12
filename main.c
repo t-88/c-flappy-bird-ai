@@ -167,7 +167,7 @@ void Agent_Update(Agent *agent, float dt, Pipe closePipe)
 int Agent_FeedForward(Agent agent, Pipe closePipe)
 {
     float inputs[DNA_INPUTS] = {
-        agent.velY / AGENT_MAX_VELY,
+        agent.velY / HEIGHT,
         agent.aabb.y / HEIGHT,
         closePipe.aabb.x / WIDTH,
         (closePipe.aabb.y + closePipe.aabb.h + PIPE_GAP) / HEIGHT,
@@ -251,11 +251,9 @@ Agent* Pop_Reset(Agent *pop)
         }
     }
 
-    // SDL_Log("%f", gen_bestFitness);
     DNA_Print(gen_bestDna);
     Agent *new_pop = calloc(POP_COUNT, sizeof(Agent));
 
-    // for (size_t i = 0; i < (int)(POP_COUNT / 3); i++) {
     for (size_t i = 0; i < (int)(POP_COUNT / 3); i++){
         new_pop[i] = Agent_newFromDna(DNA_Mutate(gen_bestDna));
     }

@@ -100,7 +100,7 @@ NN_Output DNA_FeedForward(DNA dna, float inputs[DNA_INPUTS]){
         }
     }
     for (size_t i = 0; i < DNA_HIDDEN; i++) {
-        feedForwardOutput.l1[i] = 1 / (1 + SDL_powf(2.71, -feedForwardOutput.l1[i]));
+        feedForwardOutput.l1[i] = 1 / (1 + SDL_powf(2.7, -feedForwardOutput.l1[i]));
     }
 
     for (size_t output = 0; output < DNA_OUTPUTS; output++) {
@@ -110,7 +110,7 @@ NN_Output DNA_FeedForward(DNA dna, float inputs[DNA_INPUTS]){
         }
     }
     for (size_t i = 0; i < DNA_OUTPUTS; i++) {
-        feedForwardOutput.l2[i] = 1 / (1 + SDL_powf(2.71, -feedForwardOutput.l2[i]));
+        feedForwardOutput.l2[i] = 1 / (1 + SDL_powf(2.7, -feedForwardOutput.l2[i]));
     } 
 
 

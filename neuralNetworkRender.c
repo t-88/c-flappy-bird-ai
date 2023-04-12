@@ -35,12 +35,6 @@ void NN_Render(SDL_Renderer* renderer,NN_Renderer nn_renderer,NN nn) {
         }    
 
     NN_Output output = DNA_FeedForward(nn.dna,nn.inputs);
-    // float maxB1 = 0;
-    // float maxB2 = 0;
-    // for (size_t hidden = 0; hidden < nn.hidden_count; hidden++)
-    //     maxB1 += nn.dna.b1[hidden];
-    // for (size_t output = 0; output < nn.outputs_count; output++)
-    //     maxB2 += nn.dna.b2[output];
 
     for (size_t input = 0; input < nn.inputs_count; input++) {
         SDL_SetRenderDrawColor(renderer,map(nn.inputs[input],0,1,0,255),0,0,255);
@@ -68,10 +62,6 @@ void NN_Render(SDL_Renderer* renderer,NN_Renderer nn_renderer,NN nn) {
         SDL_SetRenderDrawColor(renderer,255,0,0,255);
         SDL_RenderDrawRect(renderer,&rect);
     SDL_SetRenderDrawColor(renderer,0,0,0,255);    
-
-
-
-
 
 
 
