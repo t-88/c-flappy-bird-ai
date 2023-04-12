@@ -5,42 +5,16 @@
 #include <SDL.h>
 
 #include "neuralNetworkRender.h"
+#include "consts.h"
+#include "dna.h"
+#include "utils.h"
 
-#define WIDTH 600
-#define HEIGHT 800
-#define SPEED_UP 1
 
-#define PIPE_GAP 250
-#define PIPE_DISTANCE 300
-#define PIPE_OFFSET_X WIDTH - 100
-#define PIPE_SPEED 300 / SPEED_UP
-#define PIPE_GAP_MARGIN 50
-
-#define POP_COUNT 10
-#define AGENT_START_X 50
-
-#define DNA_INPUTS 4
-#define DNA_HIDDEN 6
-#define DNA_OUTPUTS 1
-#define DNA_MUTATION_CHANCE 10
-#define DNA_LR 0.1
-
-#define GRAVITY 35 * SPEED_UP
-#define AGENT_JUMP_FORCE 600 * SPEED_UP
-#define AGENT_MAX_VELY 20 * SPEED_UP
-#define AGENT_JUMP_DELAY 0.2 * SPEED_UP
-
-#define FPS 60
-#define TARGET_FPS 1
 float dt;
 int closest_pipe_index;
 int global_score;
 int holdingJump = 0;
 
-typedef struct AABB
-{
-    float x, y, w, h;
-} AABB;
 
 typedef struct Pipe
 {
@@ -49,13 +23,7 @@ typedef struct Pipe
     int tookScore;
 } Pipe;
 
-typedef struct DNA
-{
-    float w1[DNA_HIDDEN][DNA_INPUTS];
-    float w2[DNA_OUTPUTS][DNA_HIDDEN];
-    float b1[DNA_HIDDEN];
-    float b2[DNA_OUTPUTS];
-} DNA;
+
 
 typedef struct Agent
 {
@@ -68,14 +36,8 @@ typedef struct Agent
     float jump_delay, jump_timer;
 } Agent;
 
-float randomFloat(float a)
-{
-    return (((float)rand() / RAND_MAX) - 0.5) * 2 * a;
-}
-int isColliding(AABB aabb1, AABB aabb2)
-{
-    return aabb1.x + aabb1.w >= aabb2.x && aabb2.x + aabb2.w >= aabb1.x && aabb1.y + aabb1.h >= aabb2.y && aabb2.y + aabb2.h >= aabb1.y;
-}
+
+
 
 Agent Agent_new();
 void Agent_Update(Agent *agent, float dt, Pipe closest_pipe);
@@ -136,97 +98,15 @@ void Pipes_Render(SDL_Renderer *renderer, Pipe *pipes, int size)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 }
 
-DNA DNA_RandomDna()
-{
-    DNA dna;
-
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        for (size_t input = 0; input < DNA_INPUTS; input++)
-            dna.w1[hidden][input] = randomFloat(5);
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-            dna.w2[output][hidden] = randomFloat(5);
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        dna.b1[hidden] = randomFloat(5);
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        dna.b2[output] = randomFloat(5);
-
-    return dna;
-}
-float DNA_MutateGen(float val)
-{
-    if ((rand() % 100) > DNA_MUTATION_CHANCE)
-        return val;
-
-    float offset = randomFloat(25);
-    return val + offset * DNA_LR;
-}
-DNA DNA_Mutate(DNA dna)
-{
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        for (size_t input = 0; input < DNA_INPUTS; input++)
-            dna.w1[hidden][input] = DNA_MutateGen(dna.w1[hidden][input]);
-
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-            dna.w2[output][hidden] = DNA_MutateGen(dna.w2[output][hidden]);
-
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        dna.b1[hidden] = DNA_MutateGen(dna.b1[hidden]);
-
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        dna.b2[output] = DNA_MutateGen(dna.b2[output]);
-    return dna;
-}
-DNA DNA_Breed(DNA p1, DNA p2)
-{
-    DNA child;
-
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        for (size_t input = 0; input < DNA_INPUTS; input++)
-            child.w1[hidden][input] = (p1.w1[hidden][input] + p2.w1[hidden][input]) / 2;
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-            child.w2[output][hidden] = (p1.w2[output][hidden] + p2.w2[output][hidden]) / 2;
-
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        child.b1[hidden] = (p1.b1[hidden] + p2.b1[hidden]) / 2;
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        child.b2[output] = (p1.b2[output] + p2.b2[output]) / 2;
-
-    return child;
-}
-void DNA_Print(DNA dna) {
-    printf("{\n");
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++) {
-        printf("w%li [",hidden);
-        for (size_t input = 0; input < DNA_INPUTS; input++) {
-            printf("%f ,",dna.w1[hidden][input]);
+int Agent_getBest(Agent* pop) {
+    int index = 0;
+    for (size_t i = 0; i < POP_COUNT; i++) 
+        if (pop[i].fitness > pop[index].fitness) {
+            index = i;
         }
-        printf("]\n");
-    }
-    for (size_t output = 0; output < DNA_OUTPUTS; output++){
-        printf("w%li[",output);
-        for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++){
-            printf("%f ,",dna.b1[output]);
-        }
-        printf("]\n");
-    }
-
-    printf("b1[");
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        printf("%f ,",dna.b1[hidden]);
-    printf("]\n");
-    printf("b2[");
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-        printf("%f ,",dna.b2[output]);
-    printf("]\n");
-    printf("}\n");
-
+    return index;
 }
-
-Agent Agent_new()
-{
+Agent Agent_new(){
     Agent agent;
     agent.aabb = (AABB){AGENT_START_X, HEIGHT / 2 - 10, 30, 30};
     agent.dna = DNA_RandomDna();
@@ -287,41 +167,15 @@ void Agent_Update(Agent *agent, float dt, Pipe closePipe)
 int Agent_FeedForward(Agent agent, Pipe closePipe)
 {
     float inputs[DNA_INPUTS] = {
-        agent.velY / HEIGHT,
+        agent.velY / AGENT_MAX_VELY,
         agent.aabb.y / HEIGHT,
         closePipe.aabb.x / WIDTH,
         (closePipe.aabb.y + closePipe.aabb.h + PIPE_GAP) / HEIGHT,
     };
 
-    float hidden_layer[DNA_HIDDEN];
-    for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-    {
-        hidden_layer[hidden] = agent.dna.b1[hidden];
-        for (size_t input = 0; input < DNA_INPUTS; input++)
-        {
-            hidden_layer[hidden] += inputs[input] * agent.dna.w1[hidden][input];
-        }
-    }
+    NN_Output output = DNA_FeedForward(agent.dna,inputs);
 
-    for (size_t i = 0; i < DNA_HIDDEN; i++){
-        hidden_layer[i] = 1 / (1 + SDL_powf(2.7, -hidden_layer[i]));
-        // SDL_Log("%f + ",hidden_layer[i]);
-    }
-
-    float output_layer[DNA_OUTPUTS];
-    for (size_t output = 0; output < DNA_OUTPUTS; output++)
-    {
-        output_layer[output] = agent.dna.b2[output];
-        for (size_t hidden = 0; hidden < DNA_HIDDEN; hidden++)
-        {
-            output_layer[output] += hidden_layer[hidden] * agent.dna.w2[output][hidden];
-        }
-    }
-
-    for (size_t i = 0; i < DNA_OUTPUTS; i++) {
-        output_layer[i] = 1 / (1 + SDL_powf(2.7, -output_layer[i]));
-    }
-    if (output_layer[0] > 0.5)
+    if (output.l2[0] > 0.5)
         return 1;
 
     return 0;
@@ -333,6 +187,8 @@ void Agent_Render(SDL_Renderer *renderer, Agent agent)
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
+
+
 void Player_Update(Agent *agent, float dt, Pipe closePipe)
 {
 
@@ -453,9 +309,6 @@ int main(void)
 
 
 
-    SDL_Log("%f %f",nn_renderer.x , nn_renderer.y);
-
-
     SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer);
     int running = 1;
 
@@ -473,25 +326,30 @@ int main(void)
         int pop_count = POP_COUNT;
         for (size_t i = 0; i < POP_COUNT; i++)
         {
-            if (!pop[i].dead)
-            {
+            if (!pop[i].dead) {
                 Agent_Update(&pop[i], dt, pipes[closest_pipe_index]);
             }
-            else
-            {
+            else {
                 pop_count--;
             }
         }
-        // Player_Update(&player, dt, pipes[closest_pipe_index]);
-        // if(player.dead) {
-        //     player = Agent_new();
-        //     Pipes_Init(pipes,4);
-        // }
-        if (pop_count <= 0)
-        {
+
+
+
+
+        if (pop_count <= 0) {
             pop = Pop_Reset(pop);
             Pipes_Init(pipes, 4);
+            continue;
         }
+
+        int index = Agent_getBest(pop);
+        nn.dna = pop[index].dna;
+        nn.inputs[0] = pop[index].velY / AGENT_MAX_VELY;
+        nn.inputs[1] = pop[index].aabb.y / HEIGHT;
+        nn.inputs[2] = pipes[closest_pipe_index].aabb.x / WIDTH;
+        nn.inputs[3] = (pipes[closest_pipe_index].aabb.y + pipes[closest_pipe_index].aabb.h + PIPE_GAP) / HEIGHT;
+
 
         Pipes_Render(renderer, pipes, 4);
         for (size_t i = 0; i < POP_COUNT; i++)

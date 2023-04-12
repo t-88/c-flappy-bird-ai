@@ -2,11 +2,15 @@
 #include <SDL.h>
 
 
+#include "consts.h"
+#include "dna.h"
+
+
 
 typedef struct NN {
     int inputs_count , outputs_count , hidden_count;
-    float* w1 , w2;
-    float* b1 , b2;
+    DNA dna;
+    float inputs[DNA_INPUTS];
 } NN;
 typedef struct NN_Renderer { 
     int screen_width ,screen_height;
