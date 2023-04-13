@@ -106,7 +106,7 @@ int main(void)
     SDL_Texture* pipe_head;
     pipe_head = IMG_LoadTexture(renderer,"assets/pipe-head.png");
     SDL_Texture* pipe_body;
-    pipe_body = IMG_LoadTexture(renderer,"assets/pipe-bodypipe_body.png");
+    pipe_body = IMG_LoadTexture(renderer,"assets/pipe-body.png");
 
     
     SDL_Rect grass_bg_rect = (SDL_Rect) {0 , HEIGHT - 110 , 1200  , 51 * 2};
