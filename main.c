@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "neuralNetworkRender.h"
 #include "consts.h"
@@ -12,14 +13,11 @@
 #include "agent.h"
 
 
+
 float dt;
 int closest_pipe_index;
 int global_score;
 int holdingJump = 0;
-
-
-
-
 
 
 
@@ -98,6 +96,27 @@ int main(void)
     int running = 1;
 
     SDL_Rect rect = {10, 10, 50, 50};
+    
+    
+    
+    SDL_Texture* ground;
+    ground = IMG_LoadTexture(renderer,"assets/Sprite-0002.png");
+    SDL_Texture* grass_bg;
+    grass_bg = IMG_LoadTexture(renderer,"assets/grass.png");
+    SDL_Texture* pipe_head;
+    pipe_head = IMG_LoadTexture(renderer,"assets/pipe-head.png");
+    SDL_Texture* pipe_body;
+    pipe_body = IMG_LoadTexture(renderer,"assets/pipe-bodypipe_body.png");
+
+    
+    SDL_Rect grass_bg_rect = (SDL_Rect) {0 , HEIGHT - 110 , 1200  , 51 * 2};
+
+
+    SDL_FRect ground_rect[2];
+    for(int i = 0; i < 2; i++) {
+        ground_rect[i] = (SDL_FRect) {i * 600, HEIGHT - 50, 600 , 50 };
+    } 
+
     while (running)
     {
         Uint64 start = SDL_GetPerformanceCounter();
@@ -119,13 +138,13 @@ int main(void)
             }
         }
 
-        if (pop_count <= 0) {
-            global_score = 0;
-            closest_pipe_index = 0;
-            pop = Pop_Reset(pop);
-            Pipes_Init(pipes, 4);
-            continue;
-        }
+        // if (pop_count <= 0) {
+            // global_score = 0;
+            // closest_pipe_index = 0;
+            // pop = Pop_Reset(pop);
+            // Pipes_Init(pipes, 4);
+            // continue;
+        // }
 
         int index = Agent_getBest(pop);
         nn.dna = pop[index].dna;
@@ -135,16 +154,29 @@ int main(void)
         nn.inputs[3] = (pipes[closest_pipe_index].aabb.y + pipes[closest_pipe_index].aabb.h + PIPE_GAP) / HEIGHT;
 
 
-        Pipes_Render(renderer, pipes, 4);
+
+        SDL_RenderCopy(renderer,grass_bg,NULL,&grass_bg_rect);
+        Pipes_Render(renderer, pipes, 4,pipe_head,pipe_body);
         for (size_t i = 0; i < POP_COUNT; i++)
-        {
             if (!pop[i].dead)
-            {
                 Agent_Render(renderer, pop[i]);
+        
+        for (int i = 0; i < 2; i++) {
+            ground_rect[i].x -= PIPE_SPEED * dt * 2;
+            if(ground_rect[i].x + ground_rect[i].w <= 0) {
+                ground_rect[i].x = WIDTH;
             }
         }
-        NN_Render(renderer,nn_renderer,nn);
 
+
+        for (int i = 0; i < 2; i++) {
+            SDL_RenderCopyF(renderer, ground, NULL, &ground_rect[i]);
+        }
+        
+        // NN_Render(renderer,nn_renderer,nn);
+
+
+        SDL_SetRenderDrawColor(renderer,95,205,228,255);
         SDL_RenderPresent(renderer);
         SDL_RenderClear(renderer);
 
@@ -157,6 +189,8 @@ int main(void)
         }
     }
 
+    SDL_DestroyTexture(ground);
+    SDL_DestroyTexture(grass_bg);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

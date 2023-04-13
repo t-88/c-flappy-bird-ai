@@ -27,7 +27,7 @@ void Pipes_Update(Pipe *pipes, int size,float dt,int* global_score,int* closest_
         }
     }
 }
-void Pipes_Render(SDL_Renderer *renderer, Pipe *pipes, int size)
+void Pipes_Render(SDL_Renderer *renderer, Pipe *pipes, int size,SDL_Texture* pipe_head,SDL_Texture* pipe_body)
 {
     SDL_Rect *rects;
     rects = calloc(size * 2, sizeof(SDL_Rect));
