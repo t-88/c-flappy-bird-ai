@@ -107,6 +107,11 @@ int main(void)
     pipe_head = IMG_LoadTexture(renderer,"assets/pipe-head.png");
     SDL_Texture* pipe_body;
     pipe_body = IMG_LoadTexture(renderer,"assets/pipe-body.png");
+    SDL_Texture* clouds;
+    clouds = IMG_LoadTexture(renderer,"assets/clouds.png");
+    SDL_Rect clouds_rect = (SDL_Rect) {0 , HEIGHT - 170 , 1200  , 51 * 2};
+
+    SDL_Texture* bird = IMG_LoadTexture(renderer,"assets/bird.png");
 
     
     SDL_Rect grass_bg_rect = (SDL_Rect) {0 , HEIGHT - 110 , 1200  , 51 * 2};
@@ -138,13 +143,13 @@ int main(void)
             }
         }
 
-        // if (pop_count <= 0) {
-            // global_score = 0;
-            // closest_pipe_index = 0;
-            // pop = Pop_Reset(pop);
-            // Pipes_Init(pipes, 4);
-            // continue;
-        // }
+        if (pop_count <= 0) {
+            global_score = 0;
+            closest_pipe_index = 0;
+            pop = Pop_Reset(pop);
+            Pipes_Init(pipes, 4);
+            continue;
+        }
 
         int index = Agent_getBest(pop);
         nn.dna = pop[index].dna;
@@ -155,11 +160,15 @@ int main(void)
 
 
 
+        SDL_RenderCopy(renderer,clouds,NULL,&clouds_rect);
         SDL_RenderCopy(renderer,grass_bg,NULL,&grass_bg_rect);
+       
+       
+       
         Pipes_Render(renderer, pipes, 4,pipe_head,pipe_body);
         for (size_t i = 0; i < POP_COUNT; i++)
             if (!pop[i].dead)
-                Agent_Render(renderer, pop[i]);
+                Agent_Render(renderer, pop[i],bird);
         
         for (int i = 0; i < 2; i++) {
             ground_rect[i].x -= PIPE_SPEED * dt * 2;

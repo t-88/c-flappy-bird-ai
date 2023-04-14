@@ -5,11 +5,11 @@
 #define HEIGHT 800
 #define SPEED_UP 1
 
-#define PIPE_GAP 250
+#define PIPE_GAP 200
 #define PIPE_DISTANCE 300
 #define PIPE_OFFSET_X WIDTH - 100
 #define PIPE_SPEED 300 / SPEED_UP
-#define PIPE_GAP_MARGIN 50
+
 
 #define POP_COUNT 10
 #define AGENT_START_X 50

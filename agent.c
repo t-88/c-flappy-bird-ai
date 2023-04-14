@@ -8,9 +8,10 @@ int Agent_getBest(Agent* pop) {
         }
     return index;
 }
+
 Agent Agent_new(){
     Agent agent;
-    agent.aabb = (AABB){AGENT_START_X, HEIGHT / 2 - 10, 30, 30};
+    agent.aabb = (AABB){AGENT_START_X, HEIGHT / 2 - 10, 26 * 2, 32};
     agent.dna = DNA_RandomDna();
     agent.velY = 0;
     agent.fitness = 0;
@@ -81,10 +82,13 @@ int Agent_FeedForward(Agent agent, Pipe closePipe)
 
     return 0;
 }
-void Agent_Render(SDL_Renderer *renderer, Agent agent)
+void Agent_Render(SDL_Renderer *renderer, Agent agent,SDL_Texture* bird)
 {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_Rect rect = (SDL_Rect){agent.aabb.x, agent.aabb.y, agent.aabb.w, agent.aabb.h};
-    SDL_RenderFillRect(renderer, &rect);
+    // SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_Rect rect = (SDL_Rect){agent.aabb.x, agent.aabb.y, 26 * 2, 32};
+    // SDL_RenderFillRect(renderer, &rect);
+
+
+    SDL_RenderCopy(renderer,bird,NULL,&rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }

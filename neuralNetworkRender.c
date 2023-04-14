@@ -1,12 +1,6 @@
 #include "neuralNetworkRender.h"
  
 
-float map(float value,float start1,float end1,float start2,float end2) {
-    float maped1 = end1 - start1;
-    float maped2 = end2 - start2;
-
-    return (maped2 / maped1) * (value - start1) + start2;  
-}
 
 void NN_Render(SDL_Renderer* renderer,NN_Renderer nn_renderer,NN nn) {
     SDL_Rect rect = (SDL_Rect) {nn_renderer.x, nn_renderer.y,nn_renderer.w,nn_renderer.h};

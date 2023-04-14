@@ -21,5 +21,5 @@ Agent Agent_new();
 Agent Agent_newFromDna(DNA dna);
 void Agent_Update(Agent *agent, float dt, Pipe closest_pipe,int global_score);
 int Agent_FeedForward(Agent agent, Pipe pipe);
-void Agent_Render(SDL_Renderer *renderer, Agent agent);
+void Agent_Render(SDL_Renderer *renderer, Agent agent,SDL_Texture* bird);
 int Agent_getBest(Agent* pop);
