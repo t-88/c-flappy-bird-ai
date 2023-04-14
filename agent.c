@@ -84,11 +84,7 @@ int Agent_FeedForward(Agent agent, Pipe closePipe)
 }
 void Agent_Render(SDL_Renderer *renderer, Agent agent,SDL_Texture* bird)
 {
-    // SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_Rect rect = (SDL_Rect){agent.aabb.x, agent.aabb.y, 26 * 2, 32};
-    // SDL_RenderFillRect(renderer, &rect);
-
-
     SDL_RenderCopy(renderer,bird,NULL,&rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }

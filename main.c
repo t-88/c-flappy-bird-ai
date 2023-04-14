@@ -4,6 +4,7 @@
 #include <math.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "neuralNetworkRender.h"
 #include "consts.h"
@@ -17,9 +18,6 @@
 float dt;
 int closest_pipe_index;
 int global_score;
-int holdingJump = 0;
-
-
 
 Agent* Pop_Reset(Agent *pop)
 {
@@ -62,16 +60,19 @@ Agent* Pop_Reset(Agent *pop)
 int main(void)
 {
     SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
+    srand(time(NULL));
+
     SDL_Event event;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer);
+    SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
 
-    srand(time(NULL));
 
     Pipe pipes[4];
     closest_pipe_index = 0;
     Pipes_Init(pipes, 4);
-
     Agent *pop = calloc(POP_COUNT, sizeof(Agent));
 
     for (size_t i = 0; i < POP_COUNT; i++)
@@ -80,8 +81,8 @@ int main(void)
     NN_Renderer nn_renderer;
     nn_renderer.screen_width = WIDTH;
     nn_renderer.screen_height =  HEIGHT; 
-    nn_renderer.w = 200;
-    nn_renderer.h = 200;  
+    nn_renderer.w = 120;
+    nn_renderer.h = 150;  
     nn_renderer.x = WIDTH - nn_renderer.w;
     nn_renderer.y = HEIGHT - nn_renderer.h;  
     NN nn;
@@ -92,17 +93,18 @@ int main(void)
 
 
 
-    SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer);
-    int running = 1;
-
-    SDL_Rect rect = {10, 10, 50, 50};
-    
+    TTF_Font* font = TTF_OpenFont("assets/FFFFORWA.TTF",32);
+    SDL_Color text_color  = {0,0,0};
+    SDL_Surface* text_surface = TTF_RenderText_Solid(font,"0",text_color);
+    SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer,text_surface);
+    SDL_Rect text_rect = {WIDTH/2 - 10, 20, 32,32};
     
     
     SDL_Texture* ground;
     ground = IMG_LoadTexture(renderer,"assets/Sprite-0002.png");
     SDL_Texture* grass_bg;
     grass_bg = IMG_LoadTexture(renderer,"assets/grass.png");
+    SDL_Rect grass_bg_rect = (SDL_Rect) {0 , HEIGHT - 110 , 1200  , 51 * 2};
     SDL_Texture* pipe_head;
     pipe_head = IMG_LoadTexture(renderer,"assets/pipe-head.png");
     SDL_Texture* pipe_body;
@@ -114,14 +116,11 @@ int main(void)
     SDL_Texture* bird = IMG_LoadTexture(renderer,"assets/bird.png");
 
     
-    SDL_Rect grass_bg_rect = (SDL_Rect) {0 , HEIGHT - 110 , 1200  , 51 * 2};
-
-
     SDL_FRect ground_rect[2];
-    for(int i = 0; i < 2; i++) {
+    for(int i = 0; i < 2; i++)
         ground_rect[i] = (SDL_FRect) {i * 600, HEIGHT - 50, 600 , 50 };
-    } 
 
+    int running = 1;
     while (running)
     {
         Uint64 start = SDL_GetPerformanceCounter();
@@ -131,10 +130,19 @@ int main(void)
             if (event.type == SDL_QUIT)
                 running = 0;
 
-        Pipes_Update(pipes, 4,dt,&global_score,&closest_pipe_index);
+        int score_updated = Pipes_Update(pipes, 4,dt,&global_score,&closest_pipe_index);
+        if(score_updated) {
+            int lenght = (int)SDL_log10(global_score) * sizeof(char);
+            char str[lenght];
+            sprintf(str,"%d",global_score);
+
+            text_surface = TTF_RenderText_Solid(font,str,text_color);
+            text_texture = SDL_CreateTextureFromSurface(renderer,text_surface);
+        }
+        
+        
         int pop_count = POP_COUNT;
-        for (size_t i = 0; i < POP_COUNT; i++)
-        {
+        for (size_t i = 0; i < POP_COUNT; i++) {
             if (!pop[i].dead) {
                 Agent_Update(&pop[i], dt, pipes[closest_pipe_index],global_score);
             }
@@ -148,6 +156,10 @@ int main(void)
             closest_pipe_index = 0;
             pop = Pop_Reset(pop);
             Pipes_Init(pipes, 4);
+
+            text_surface = TTF_RenderText_Solid(font,"0",text_color);
+            text_texture = SDL_CreateTextureFromSurface(renderer,text_surface);
+
             continue;
         }
 
@@ -182,11 +194,13 @@ int main(void)
             SDL_RenderCopyF(renderer, ground, NULL, &ground_rect[i]);
         }
         
-        // NN_Render(renderer,nn_renderer,nn);
+        NN_Render(renderer,nn_renderer,nn);
 
 
-        SDL_SetRenderDrawColor(renderer,95,205,228,255);
+        SDL_RenderCopy(renderer,text_texture,NULL,&text_rect);
+
         SDL_RenderPresent(renderer);
+        SDL_SetRenderDrawColor(renderer,95,205,228,255);
         SDL_RenderClear(renderer);
 
         Uint64 elapsedCount = SDL_GetPerformanceCounter() - start;
@@ -198,8 +212,15 @@ int main(void)
         }
     }
 
+
+
+    SDL_FreeSurface(text_surface);
+    SDL_DestroyTexture(bird);
     SDL_DestroyTexture(ground);
     SDL_DestroyTexture(grass_bg);
+    SDL_DestroyTexture(pipe_head);
+    SDL_DestroyTexture(pipe_body);
+    SDL_DestroyTexture(clouds);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
