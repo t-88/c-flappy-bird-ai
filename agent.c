@@ -52,11 +52,15 @@ void Agent_Update(Agent *agent, float dt, Pipe closePipe,int global_score)
         closePipe.aabb.y + closePipe.height + PIPE_GAP,
         closePipe.aabb.w,
         HEIGHT - (closePipe.aabb.h + PIPE_GAP)};
+    
+
     if (isColliding(closePipe.aabb, agent->aabb) || isColliding(bottomPipe, agent->aabb)) {
         agent->dead = 1;
+        agent->fitness -= 50;
     }
     if (agent->aabb.y + agent->aabb.h > HEIGHT + 5 || agent->aabb.y < -5) {
         agent->dead = 1;
+        agent->fitness -= 400;
     }
 
     if(agent->dead) {
